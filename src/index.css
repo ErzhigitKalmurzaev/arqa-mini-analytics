@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Minimal baseline to let Tailwind control theming */
+html, body, #root { height: 100%; }
+body { margin: 0; padding: 0; }

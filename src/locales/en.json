@@ -1,0 +1,12 @@
+{
+    "dashboard": "Dashboard",
+    "orders": "Orders",
+    "customers": "Customers",
+    "settings": "Settings",
+    "language": "Language",
+    "en": "EN",
+    "ru": "RU",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark"
+}
