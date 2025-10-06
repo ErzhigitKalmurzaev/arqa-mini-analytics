@@ -8,9 +8,9 @@ export default function PageHeader({
   actions?: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <div className="flex justify-between items-center gap-2 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
+        <h3 className="text-xl font-semibold tracking-tight">{title}</h3>
         {subtitle ? (
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
         ) : null}

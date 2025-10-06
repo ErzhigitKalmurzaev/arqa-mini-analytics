@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { useSettings } from '../context/SettingsContext'
+import { useSettings } from '../../context/SettingsContext'
 
 export default function Settings() {
   const { t } = useTranslation()

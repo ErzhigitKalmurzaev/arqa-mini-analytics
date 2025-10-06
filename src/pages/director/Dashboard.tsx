@@ -1,16 +1,16 @@
 import { useTranslation } from 'react-i18next'
-import { useOrders } from '../hooks/useOrders'
-import { Card } from '../components/ui/Card'
+import { Card } from '../../components/ui/Card'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts'
-import PageHeader from '../components/common/PageHeader'
-import Skeleton from '../components/ui/Skeleton'
-import FiltersDialog, { type Filters } from '../components/common/FiltersDialog'
+import PageHeader from '../../components/common/PageHeader'
+import Skeleton from '../../components/ui/Skeleton'
+import FiltersDialog, { type Filters } from '../../components/common/FiltersDialog'
 import { useMemo, useState } from 'react'
-import { downloadCsv } from '../utils/csv'
+import { downloadCsv } from '../../utils/csv'
 
 export default function Dashboard() {
   const { t } = useTranslation()
-  const { data: orders = [], isLoading } = useOrders()
+  const orders: any[] = [];
+  const isLoading = false
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [filters, setFilters] = useState<Filters>({ period: '30d' })
 
@@ -68,7 +68,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-3">
       <PageHeader
         title={t('dashboard')}
         actions={(
