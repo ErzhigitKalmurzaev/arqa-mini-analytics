@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "composite": true,                 // ✅ обязательно для project references
+    "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
     "target": "ES2022",
     "lib": ["ES2022"],
@@ -10,8 +10,8 @@
     "moduleResolution": "bundler",
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
-    "noEmit": false,                   // ✅ TS требует разрешить emit при composite
-    "outDir": "./dist",                // ✅ можно указать просто для формальности
+    "noEmit": false,
+    "outDir": "./dist",
 
     "strict": true,
     "noUnusedLocals": false,
