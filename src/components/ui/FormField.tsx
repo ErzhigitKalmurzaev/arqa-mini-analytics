@@ -1,4 +1,3 @@
-// components/common/FormField.tsx
 import type { ChangeEvent } from 'react'
 
 interface FormFieldProps {

@@ -1,4 +1,3 @@
-// pages/auth/Login.tsx
 import { useState } from "react"
 import type { FormEvent, ChangeEvent } from "react"
 import { useNavigate } from "react-router-dom"

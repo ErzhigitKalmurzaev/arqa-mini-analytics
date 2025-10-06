@@ -1,5 +1,3 @@
-// pages/employee/EmployeeCreate.tsx
-'use client'
 import { useEffect, useState } from "react"
 import type { FormEvent, ChangeEvent } from "react"
 import PageHeader from "../../../components/common/PageHeader"

@@ -1,17 +1,16 @@
 import { useTranslation } from 'react-i18next'
 import './App.css'
-import DirectorRoute from './routes/directorRoutes.tsx'
-import ReceiverRoute from './routes/receiverRoutes.tsx'
-import OTKRoute from './routes/otkRoutes.tsx'
-import PackerRoute from './routes/packerRoutes.tsx'
+import DirectorRoute from './routes/directorRoutes'
+import ReceiverRoute from './routes/receiverRoutes'
+import OTKRoute from './routes/otkRoutes'
+import PackerRoute from './routes/packerRoutes'
 import { useDispatch, useSelector } from 'react-redux'
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
-import { checkAuth } from './store/auth/authSlice.ts'
-import Login from './pages/Login/Login.tsx'
+import { checkAuth } from './store/auth/authSlice'
+import Login from './pages/Login/Login'
 import { ToastContainer } from 'react-toastify';
-import MarkerRoute from './routes/markerRoutes.tsx'
-import QualityControl from './pages/otk/skan.tsx'
+import MarkerRoute from './routes/markerRoutes'
 
 export default function App() {
   useTranslation()
@@ -43,7 +42,7 @@ export default function App() {
   
   return (
     <div>
-      {/* <Routes>
+      <Routes>
           <Route path="/" element={isAuthenticated === 'success' ? <Navigate to="/crm/" /> : <Login />} />
           {
             me_role &&
@@ -58,8 +57,7 @@ export default function App() {
             </>
           }
       </Routes>
-      <ToastContainer autoClose={1000}/> */}
-      <QualityControl/>
+      <ToastContainer autoClose={1000}/>
     </div>
   )
 };

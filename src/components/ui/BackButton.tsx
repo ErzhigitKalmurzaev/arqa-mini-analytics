@@ -1,4 +1,3 @@
-// components/common/BackButton.tsx
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 

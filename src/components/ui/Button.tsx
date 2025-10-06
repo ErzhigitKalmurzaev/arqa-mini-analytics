@@ -1,4 +1,4 @@
-import { cn } from '../../utils/cn.ts'
+import { cn } from '../../utils/cn'
 import type { ButtonHTMLAttributes, PropsWithChildren } from 'react'
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {

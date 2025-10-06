@@ -1,4 +1,4 @@
-import { cn } from '../../utils/cn.ts'
+import { cn } from '../../utils/cn'
 
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return <div className={cn('rounded-lg border bg-white shadow-sm dark:bg-gray-900 dark:border-gray-800', className)} {...props} />

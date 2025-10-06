@@ -1,12 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.tsx'
+import App from './App'
 import { BrowserRouter } from 'react-router-dom'
 import './i18n'
 import { Provider } from 'react-redux';
-import { SettingsProvider } from './context/SettingsContext.tsx'
-import { store } from './store/store.ts'
+import { SettingsProvider } from './context/SettingsContext'
+import { store } from './store/store'
 
 
 // Регистрация Service Worker для PWA
