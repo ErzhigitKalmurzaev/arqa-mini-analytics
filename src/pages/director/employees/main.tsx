@@ -41,7 +41,7 @@ const EmployeesPage = () => {
       {employees_status === 'loading' ? (
         <Skeleton className="h-48" />
       ) : employees.length === 0 ? (
-        <EmptyState title={'No results'}/>
+        <EmptyState title={'Нет сотрудников'} description={'По вашему запросу ничего не нашлось'}/>
       ) : (
         <Table>
           <THead>

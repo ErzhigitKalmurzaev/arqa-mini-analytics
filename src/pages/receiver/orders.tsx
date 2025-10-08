@@ -53,7 +53,7 @@ export default function Orders() {
       {orders_status === 'loading' ? (
         <Skeleton className="h-48" />
       ) : orders.length === 0 ? (
-        <EmptyState title={t('no_results') || 'No results'} description={t('try_adjusting_filters') || 'Try adjusting your filters.'} />
+        <EmptyState title="Заказы не найдены" description="По вашему запросу ничего не нашлось" />
       ) : (
         <>
         <Table>

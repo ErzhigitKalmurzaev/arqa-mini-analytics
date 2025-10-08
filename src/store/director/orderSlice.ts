@@ -15,6 +15,30 @@ export const getOrders = createAsyncThunk<IOrder[], void, { rejectValue: string 
   }
 );
 
+export const getStatements = createAsyncThunk<IOrder[], void, { rejectValue: string }>(
+  'EmployeeSlice/getStatements',
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data } = await axiosInstance.get<IOrder[]>('director/statement/list/');
+      return data;
+    } catch (err: any) {
+      return rejectWithValue(err.message ?? 'Ошибка загрузки заказов');
+    }
+  }
+);
+
+export const postStatement = createAsyncThunk<any, any, { rejectValue: string }>(
+  'EmployeeSlice/postStatement',
+  async (props, { rejectWithValue }) => {
+    try {
+      const { data } = await axiosInstance.post<any>('director/statement/update/', props);
+      return data;
+    } catch (err: any) {
+      return rejectWithValue(err.message ?? 'Ошибка загрузки заказов');
+    }
+  }
+);
+
 export const getOrderById = createAsyncThunk<IOrder, any, { rejectValue: string }>(
   'EmployeeSlice/getClients',
   async (id, { rejectWithValue }) => {
@@ -56,6 +80,8 @@ export const editOrder = createAsyncThunk<IOrder, {order: OrderProps, id: string
 const initialState: OrderState = {
   orders: [],
   orders_status: 'loading',
+  statements: [],
+  statements_status: 'loading',
   order: null,
   order_status: 'loading',
 };
@@ -78,6 +104,17 @@ const OrderSlice = createSlice({
       })
       .addCase(getOrders.rejected, (state) => {
         state.orders_status = 'error';
+      })
+
+      .addCase(getStatements.pending, (state) => {
+        state.statements_status = 'loading';
+      })
+      .addCase(getStatements.fulfilled, (state, action) => {
+        state.statements = action.payload;
+        state.statements_status = 'success';
+      })
+      .addCase(getStatements.rejected, (state) => {
+        state.statements_status = 'error';
       });
   },
 });

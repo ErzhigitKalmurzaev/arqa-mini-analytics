@@ -1,44 +1,19 @@
 import { useState, useRef, useEffect } from "react"
 import { Camera, Package, CheckCircle, AlertCircle, X, Scan } from "lucide-react"
+import { useAppDispatch } from "../../store/hooks"
+import { sendSkanDatas } from "../../store/packer/packSlice"
+import { toast } from "react-toastify"
 
 interface PackageData {
   qrCode: string
   productName: string
   color: string
   size: string
-  quantity: number
-  orderId: string
-}
-
-// Мок данные - в реальности придут с сервера
-const MOCK_PACKAGE_DATA: Record<string, PackageData> = {
-  'PKG-001-M-BLACK': { 
-    qrCode: 'PKG-001-M-BLACK', 
-    productName: 'Футболка базовая',
-    color: 'Черный', 
-    size: 'M', 
-    quantity: 1,
-    orderId: 'ORD-2025-001'
-  },
-  'PKG-001-L-BLACK': { 
-    qrCode: 'PKG-001-L-BLACK', 
-    productName: 'Футболка базовая',
-    color: 'Черный', 
-    size: 'L', 
-    quantity: 2,
-    orderId: 'ORD-2025-002'
-  },
-  'PKG-001-S-WHITE': { 
-    qrCode: 'PKG-001-S-WHITE', 
-    productName: 'Футболка базовая',
-    color: 'Белый', 
-    size: 'S', 
-    quantity: 1,
-    orderId: 'ORD-2025-003'
-  }
 }
 
 const PackerSkan = () => {
+
+  const dispatch = useAppDispatch()
   const [isScanning, setIsScanning] = useState(false)
   const [packageData, setPackageData] = useState<PackageData | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -76,7 +51,7 @@ const PackerSkan = () => {
   }, [])
 
   const handleQRCodeDetected = (decodedText: string) => {
-    console.log('QR код обнаружен:', decodedText)
+    const decodedQR = JSON.parse(decodedText)
     
     // Избегаем повторного сканирования
     if (decodedText === lastScannedCode) {
@@ -90,20 +65,20 @@ const PackerSkan = () => {
       navigator.vibrate(200)
     }
     
-    // Ищем данные по QR коду
-    const data = MOCK_PACKAGE_DATA[decodedText]
-    
-    if (data) {
-      setPackageData(data)
+    if (decodedQR) {
+      setPackageData({
+        qrCode: decodedQR.internal_code,
+        productName: decodedQR.product,
+        color: decodedQR.color,
+        size: decodedQR.size
+      })
     } else {
       // Если данных нет в моках, создаем базовую запись
       setPackageData({
         qrCode: decodedText,
         productName: 'Товар не определен',
         color: 'Не указан',
-        size: 'Не указан',
-        quantity: 0,
-        orderId: 'Не указан'
+        size: 'Не указан'
       })
     }
     
@@ -228,18 +203,14 @@ const PackerSkan = () => {
 
     setIsSubmitting(true)
     try {
-      console.log('Подтверждение упаковки:', packageData)
-      
-      // Имитация отправки на сервер
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      setSuccessMessage(`Товар ${packageData.productName} (${packageData.color}, ${packageData.size}) успешно упакован!`)
-      
-      // Очищаем через 2 секунды и готовы к следующему сканированию
-      setTimeout(() => {
-        resetState()
-      }, 2000)
-      
+      dispatch(sendSkanDatas(packageData.qrCode)).then((res) => {
+        if(res.meta.requestStatus === 'fulfilled') {
+          toast.success('Товар упакован!')
+          handleCancel()
+        } else {
+          toast.error(res.payload || 'Произошла ошибка при отправке')
+        }
+      })
     } catch (error) {
       alert('Ошибка при подтверждении упаковки')
       console.error(error)
@@ -372,7 +343,6 @@ const PackerSkan = () => {
                     <Package size={28} />
                     <div>
                       <h3 className="text-lg font-bold">Товар к упаковке</h3>
-                      <p className="text-sm text-blue-100">Заказ #{packageData.orderId}</p>
                     </div>
                   </div>
                 </div>
@@ -407,13 +377,6 @@ const PackerSkan = () => {
                       </p>
                     </div>
                   </div>
-
-                  <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                    <p className="text-xs text-green-600 dark:text-green-400 font-medium mb-1">Количество</p>
-                    <p className="text-2xl font-bold text-green-700 dark:text-green-300">
-                      {packageData.quantity} шт.
-                    </p>
-                  </div>
                 </div>
 
                 {/* Кнопки действий */}
@@ -437,7 +400,7 @@ const PackerSkan = () => {
                       </>
                     ) : (
                       <>
-                        <CheckCircle size={20}/> Упаковано
+                        <CheckCircle size={20}/> Упаковать
                       </>
                     )}
                   </button>

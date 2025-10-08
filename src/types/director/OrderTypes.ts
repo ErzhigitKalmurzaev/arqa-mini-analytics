@@ -34,6 +34,8 @@ export interface OrderProductDetail {
   export interface OrderState {
     orders: IOrder[];
     orders_status: 'loading' | 'success' | 'error';
+    statements: any[];
+    statements_status: 'loading' | 'success' | 'error';
     order: IOrder | null;
     order_status: 'loading' | 'success' | 'error';
   }

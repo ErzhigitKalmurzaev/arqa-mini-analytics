@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from "react"
 import { Camera, X, CheckCircle, XCircle, Scan, AlertCircle } from "lucide-react"
+import { toast } from "react-toastify"
+import { useAppDispatch } from "../../store/hooks"
+import { sendSkanDatas } from "../../store/otk/skanSlice"
 
 interface ScannedData {
   qrCode: string
@@ -9,8 +12,9 @@ interface ScannedData {
 }
 
 interface DefectPhoto {
-  id: string
-  url: string
+  id: string;
+  url: string;
+  file: File; // Добавляем оригинальный файл
 }
 
 const DEFECT_TYPES = [
@@ -28,6 +32,9 @@ const DEFECT_TYPES = [
 ]
 
 const QualityControl = () => {
+
+  const dispatch = useAppDispatch();
+
   const [isScanning, setIsScanning] = useState(false)
   const [scannedData, setScannedData] = useState<ScannedData | null>(null)
   const [showDefectForm, setShowDefectForm] = useState(false)
@@ -212,12 +219,21 @@ const QualityControl = () => {
   const handleAccept = async () => {
     setIsSubmitting(true)
     try {
-      console.log('Принято:', scannedData)
-      await new Promise(resolve => setTimeout(resolve, 500))
-      alert('Товар принят')
-      resetState()
+      dispatch(sendSkanDatas({
+        internal_code: scannedData?.qrCode || '',
+        comment: defectType,
+        images: defectPhotos || [],
+        is_defect: showDefectForm
+      })).then((res) => {
+        if(res.meta.requestStatus === 'fulfilled') {
+          toast.success('Товар принят!')
+          resetState()
+        } else {
+          toast.error('Произошла ошибка при отправке')
+        }
+      })
     } catch {
-      alert('Ошибка')
+      toast.error('Ошибка')
     } finally {
       setIsSubmitting(false)
     }
@@ -226,24 +242,29 @@ const QualityControl = () => {
   const handleReject = () => setShowDefectForm(true)
 
   const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files) return
+    const files = e.target.files;
+    if (!files) return;
+    
     Array.from(files).forEach(file => {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = (event) => {
         const newPhoto: DefectPhoto = {
-          id: Date.now().toString() + Math.random(),
-          url: event.target?.result as string
-        }
-        setDefectPhotos(prev => [...prev, newPhoto])
-      }
-      reader.readAsDataURL(file)
-    })
-  }
+          id: Date.now().toString() + Math.random().toString(36),
+          url: event.target?.result as string,
+          file: file // Сохраняем оригинальный файл
+        };
+        setDefectPhotos(prev => [...prev, newPhoto]);
+      };
+      reader.readAsDataURL(file);
+    });
+    
+    // Очищаем input для возможности повторной загрузки того же файла
+    e.target.value = '';
+  };
 
   const removePhoto = (id: string) => {
-    setDefectPhotos(prev => prev.filter(photo => photo.id !== id))
-  }
+    setDefectPhotos(prev => prev.filter(photo => photo.id !== id));
+  };
 
   const submitDefect = async () => {
     if (!defectType) {
@@ -256,10 +277,19 @@ const QualityControl = () => {
     }
     setIsSubmitting(true)
     try {
-      console.log('Отправка брака:', { qrCode: scannedData, defectType, photos: defectPhotos })
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      alert('Брак зарегистрирован')
-      resetState()
+      dispatch(sendSkanDatas({
+        internal_code: scannedData?.qrCode || '',
+        comment: defectType,
+        images: defectPhotos || [],
+        is_defect: showDefectForm
+      })).then((res) => {
+        if(res.meta.requestStatus === 'fulfilled') {
+          toast.success('Брак зарегистрирован')
+          resetState()
+        } else {
+          toast.error('Произошла ошибка при отправке')
+        }
+      })
     } catch {
       alert('Ошибка при отправке')
     } finally {
@@ -415,6 +445,7 @@ const QualityControl = () => {
                   onChange={handlePhotoCapture}
                   className="hidden"
                 />
+                
                 <button 
                   onClick={() => photoInputRef.current?.click()} 
                   className="w-full px-4 py-3 border-2 border-dashed dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 text-gray-700 dark:text-gray-300"
@@ -426,7 +457,11 @@ const QualityControl = () => {
                   <div className="grid grid-cols-3 gap-2 mt-3">
                     {defectPhotos.map(photo => (
                       <div key={photo.id} className="relative aspect-square">
-                        <img src={photo.url} alt="Брак" className="w-full h-full object-cover rounded-lg"/>
+                        <img 
+                          src={photo.url} 
+                          alt="Брак" 
+                          className="w-full h-full object-cover rounded-lg"
+                        />
                         <button 
                           onClick={() => removePhoto(photo.id)} 
                           className="absolute top-1 right-1 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg transition-colors"

@@ -4,6 +4,8 @@ import EmployeeSlice from "./director/employeeSlice";
 import ClientSlice from "./director/clientSlice";
 import OrderSlice from "./director/orderSlice";
 import ReceiverOrderSlice from "./receiver/ordersSlice";
+import OTKSkanSLice from "./otk/skanSlice";
+import PackerSkanSLice from "./packer/packSlice";
 // сюда же можно подключить слайсы, если нужны
 
 export const store = configureStore({
@@ -14,7 +16,13 @@ export const store = configureStore({
     order: OrderSlice.reducer,
 
     // receiver
-    receiver_orders: ReceiverOrderSlice.reducer
+    receiver_orders: ReceiverOrderSlice.reducer,
+
+    //otk
+    otk: OTKSkanSLice.reducer,
+
+    //packer
+    packer: PackerSkanSLice.reducer
   },
 })
 

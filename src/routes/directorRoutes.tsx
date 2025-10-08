@@ -10,6 +10,7 @@ import Layout from "../components/layout/Layout";
 import EmployeeEdit from "../pages/director/employees/edit";
 import ClientEdit from "../pages/director/clients/edit";
 import OrderEdit from "../pages/director/orders/edit";
+import Statement from "../pages/director/statement/main";
 
 
 const DirectorRoute = () => {
@@ -31,6 +32,8 @@ const DirectorRoute = () => {
         <Route path="employees" element={<EmployeesPage />} />
         <Route path="employees/create" element={<EmployeeCreate />} />
         <Route path="employees/:id" element={<EmployeeEdit />} />
+
+        <Route path="statement" element={<Statement />} />
       </Route>
     </Routes>
   )

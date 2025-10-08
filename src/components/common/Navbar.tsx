@@ -26,6 +26,10 @@ const Navbar = () => {
             name: 'Сотрудники',
             link: '/crm/employees',
         },
+        {
+            name: 'Заявки',
+            link: '/crm/statement',
+        },
       ]
     },
     {
