@@ -38,5 +38,47 @@ export interface OrderProductDetail {
     statements_status: 'loading' | 'success' | 'error';
     order: IOrder | null;
     order_status: 'loading' | 'success' | 'error';
+    order_statistics: OrderStatisticsData;
+    order_statistics_status: 'loading' | 'success' | 'error';
+  }
+
+  export interface Staff {
+    fullname: string
+    amount: number
+  }
+  
+  export interface Work {
+    status: number
+    amount: number
+    staffs: Staff[]
+  }
+  
+  export interface Detail {
+    color: string
+    size: string
+    planned_amount: number
+    fact_amount: number
+    works: Work[]
+  }
+  
+  export interface ProductInfo {
+    product_title: string
+    planned_total: number
+    fact_total: number
+    details: Detail[]
+  }
+  
+  export interface Summary {
+    RECEIVER: number
+    OTK: number
+    PACKER: number
+    MARKER: number
+    CONTROLLER: number
+    DEFECT: number
+  }
+  
+  export interface OrderStatisticsData {
+    summary: Summary
+    info: ProductInfo[]
   }
   

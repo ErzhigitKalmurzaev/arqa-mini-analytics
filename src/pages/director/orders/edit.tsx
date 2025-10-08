@@ -7,6 +7,7 @@ import { editOrder, getOrderById } from "../../../store/director/orderSlice"
 import { toast } from "react-toastify"
 import { useNavigate, useParams } from "react-router-dom"
 import { order_statuses } from "../../../utils/constants"
+import Button from "../../../components/ui/Button"
 
 interface ProductDetail {
   color: string
@@ -174,7 +175,7 @@ const OrderEdit = () => {
             product_title: p.product_title,
             details: p.details
           })),
-          status: 1,
+          status: status,
           client: clientId,
         }
   
@@ -200,20 +201,20 @@ const OrderEdit = () => {
       setErrors({})
     }
     
-
   return (
     <div className="min-h-screen w-full flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Sticky Header */}
       <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 shadow-sm">
         <div className="px-4 py-2">
-          <div className="flex items-center justify-center gap-3 mb-1">
-            <div className="flex-1">
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white">Создание заказа</h1>
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div className="flex">
+              <h1 className="text-lg font-bold text-gray-900 dark:text-white">Редактирование заказа</h1>
             </div>
+            <Button type="button" onClick={() => navigate("statistics")}>Статистика</Button>
           </div>
           
           {/* Выбор клиента */}
-          <div className="flex justify-between gap-x-5">
+          <div className="flex justify-between gap-x-5 mt-2">
             <div className="w-full">
                 <label className="block text-sm text-left font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Клиент <span className="text-red-500">*</span>

@@ -11,6 +11,7 @@ import EmployeeEdit from "../pages/director/employees/edit";
 import ClientEdit from "../pages/director/clients/edit";
 import OrderEdit from "../pages/director/orders/edit";
 import Statement from "../pages/director/statement/main";
+import OrderStatistics from "../pages/director/orders/statistic";
 
 
 const DirectorRoute = () => {
@@ -24,6 +25,7 @@ const DirectorRoute = () => {
         <Route path="orders" element={<Orders />} />
         <Route path="orders/create" element={<OrderCreate />} />
         <Route path="orders/:id" element={<OrderEdit />} />
+        <Route path="orders/:id/statistics" element={<OrderStatistics />} />
 
         <Route path="clients" element={<Customers />} />
         <Route path="clients/create" element={<ClientCreate />} />

@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axiosInstance from '../api/baseApi';
-import type { IOrder, OrderProps, OrderState } from '../../types/director/OrderTypes';
+import type { IOrder, OrderProps, OrderState, OrderStatisticsData } from '../../types/director/OrderTypes';
 
 // thunk
 export const getOrders = createAsyncThunk<IOrder[], void, { rejectValue: string }>(
@@ -8,6 +8,18 @@ export const getOrders = createAsyncThunk<IOrder[], void, { rejectValue: string 
   async (_, { rejectWithValue }) => {
     try {
       const { data } = await axiosInstance.get<IOrder[]>('director/order/read/');
+      return data;
+    } catch (err: any) {
+      return rejectWithValue(err.message ?? 'Ошибка загрузки заказов');
+    }
+  }
+);
+
+export const getOrdersStatistics = createAsyncThunk<OrderStatisticsData, any, { rejectValue: string }>(
+  'EmployeeSlice/getOrdersStatistics',
+  async (props, { rejectWithValue }) => {
+    try {
+      const { data } = await axiosInstance.get<OrderStatisticsData>(`director/order/?order_id=${props}`);
       return data;
     } catch (err: any) {
       return rejectWithValue(err.message ?? 'Ошибка загрузки заказов');
@@ -84,6 +96,18 @@ const initialState: OrderState = {
   statements_status: 'loading',
   order: null,
   order_status: 'loading',
+  order_statistics: {
+    summary: {
+      RECEIVER: 0,
+      OTK: 0,
+      PACKER: 0,
+      MARKER: 0,
+      CONTROLLER: 0,
+      DEFECT: 0,
+    },
+    info: []
+  },
+  order_statistics_status: 'loading',
 };
 
 // slice
@@ -115,7 +139,18 @@ const OrderSlice = createSlice({
       })
       .addCase(getStatements.rejected, (state) => {
         state.statements_status = 'error';
-      });
+      })
+
+      .addCase(getOrdersStatistics.pending, (state) => {
+        state.order_statistics_status = 'loading';
+      })
+      .addCase(getOrdersStatistics.fulfilled, (state, action) => {
+        state.order_statistics = action.payload;
+        state.order_statistics_status = 'success';
+      })
+      .addCase(getOrdersStatistics.rejected, (state) => {
+        state.order_statistics_status = 'error';
+      })
   },
 });
 
