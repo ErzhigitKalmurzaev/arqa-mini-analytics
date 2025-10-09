@@ -11,10 +11,6 @@ const Navbar = () => {
       name: 'director',
       buttons: [
         {
-            name: 'Статистика',
-            link: '/crm',
-        },
-        {
             name: 'Заказы',
             link: '/crm/orders',
         },

@@ -19,7 +19,7 @@ const DirectorRoute = () => {
   return (
     <Routes>
       <Route path="/*" element={<Layout />}>
-        <Route index element={<Navigate to="dashboard" replace />} /> 
+        <Route index element={<Navigate to="orders" replace />} /> 
             
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="orders" element={<Orders />} />
