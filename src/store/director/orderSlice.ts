@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axiosInstance from '../api/baseApi';
-import type { IOrder, OrderProps, OrderState, OrderStatisticsData } from '../../types/director/OrderTypes';
+import type { IOrder, OrderProps, OrderState, OrderStatisticsData, PositionQRs, ProductBarcode } from '../../types/director/OrderTypes';
 
 // thunk
 export const getOrders = createAsyncThunk<IOrder[], void, { rejectValue: string }>(
@@ -80,6 +80,42 @@ export const editOrder = createAsyncThunk<IOrder, {order: OrderProps, id: string
   async ({ order, id }, { rejectWithValue }) => {
     try {
       const { data } = await axiosInstance.patch<IOrder>(`director/order/crud/${id}/`, order);
+      return data;
+    } catch (err: any) {
+      return rejectWithValue(err.message ?? 'Ошибка создания заказа');
+    }
+  }
+)
+
+export const postPositionQRs = createAsyncThunk<any, PositionQRs, { rejectValue: string }>(
+  'EmployeeSlice/postPositionQRs',
+  async (order, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      formData.append('order_id', order.order_id);
+      formData.append('product_title', order.product_title);
+      formData.append('color', order.color);
+      formData.append('size', order.size);
+      formData.append('file', order.file);
+
+      const { data } = await axiosInstance.post<any>('director/pdf/hs-code/', formData);
+      return data;
+    } catch (err: any) {
+      return rejectWithValue(err.message ?? 'Ошибка создания заказа');
+    }
+  }
+)
+
+export const postProductBarcodes = createAsyncThunk<any, ProductBarcode, { rejectValue: string }>(
+  'EmployeeSlice/postProductBarcodes',
+  async (order, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      formData.append('order_id', order.order_id);
+      formData.append('product_title', order.product_title);
+      formData.append('file', order.file);
+
+      const { data } = await axiosInstance.post<any>('director/pdf/wb-code/', formData);
       return data;
     } catch (err: any) {
       return rejectWithValue(err.message ?? 'Ошибка создания заказа');

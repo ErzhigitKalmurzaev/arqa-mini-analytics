@@ -82,3 +82,16 @@ export interface OrderProductDetail {
     info: ProductInfo[]
   }
   
+  export interface PositionQRs {
+    order_id: string;
+    product_title: string;
+    color: string;
+    size: string;
+    file: File;
+  }
+
+  export interface ProductBarcode {
+    order_id: string;
+    product_title: string;
+    file: File;
+  }

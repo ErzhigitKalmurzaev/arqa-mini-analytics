@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react"
 import type { FormEvent, ChangeEvent } from "react"
-import { Trash2, Plus, Package, Save } from "lucide-react"
+import { Trash2, Plus, Package, Save, Upload, FileText, X } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "../../../store/hooks"
 import { getClients } from "../../../store/director/clientSlice"
-import { editOrder, getOrderById } from "../../../store/director/orderSlice"
+import { editOrder, getOrderById, postPositionQRs, postProductBarcodes } from "../../../store/director/orderSlice"
 import { toast } from "react-toastify"
 import { useNavigate, useParams } from "react-router-dom"
 import { order_statuses } from "../../../utils/constants"
@@ -13,18 +13,24 @@ interface ProductDetail {
   color: string
   size: string
   amount: number
+  qrFile?: File | null
 }
 
 interface OrderProduct {
   id: string
   product_title: string
   details: ProductDetail[]
+  barcodeFile?: File | null
 }
 
 interface CreateOrderData {
   order_products: {
     product_title: string
-    details: ProductDetail[]
+    details: {
+      color: string
+      size: string
+      amount: number
+    }[]
   }[]
   status: number
   client: string
@@ -61,9 +67,13 @@ const OrderEdit = () => {
                 
                 // Маппинг продуктов из API → локальный формат с id
                 const mappedProducts: OrderProduct[] = (data.order_products ?? []).map((p, index) => ({
-                    id: `${index}-${Date.now()}`, // генерим id, так как с бэка его нет
+                    id: `${index}-${Date.now()}`,
                     product_title: p.product_title,
-                    details: p.details ?? []
+                    details: (p.details ?? []).map(d => ({
+                      ...d,
+                      qrFile: null
+                    })),
+                    barcodeFile: null
                 }))
                 
                 setProducts(mappedProducts)
@@ -101,7 +111,8 @@ const OrderEdit = () => {
       const newProduct: OrderProduct = {
         id: Date.now().toString(),
         product_title: currentProduct.product_title,
-        details: []
+        details: [],
+        barcodeFile: null
       }
   
       setProducts(prev => [...prev, newProduct])
@@ -119,7 +130,7 @@ const OrderEdit = () => {
       setProducts(prev =>
         prev.map(product =>
           product.id === productId
-            ? { ...product, details: [...product.details, { ...currentDetail }] }
+            ? { ...product, details: [...product.details, { ...currentDetail, qrFile: null }] }
             : product
         )
       )
@@ -137,6 +148,29 @@ const OrderEdit = () => {
         prev.map(product =>
           product.id === productId
             ? { ...product, details: product.details.filter((_, i) => i !== detailIndex) }
+            : product
+        )
+      )
+    }
+
+    const handleProductBarcodeUpload = (productId: string, file: File | null) => {
+      setProducts(prev =>
+        prev.map(product =>
+          product.id === productId ? { ...product, barcodeFile: file } : product
+        )
+      )
+    }
+
+    const handleDetailQRUpload = (productId: string, detailIndex: number, file: File | null) => {
+      setProducts(prev =>
+        prev.map(product =>
+          product.id === productId
+            ? {
+                ...product,
+                details: product.details.map((detail, index) =>
+                  index === detailIndex ? { ...detail, qrFile: file } : detail
+                )
+              }
             : product
         )
       )
@@ -173,20 +207,59 @@ const OrderEdit = () => {
         const orderData: CreateOrderData = {
           order_products: products.map(p => ({
             product_title: p.product_title,
-            details: p.details
+            details: p.details.map(d => ({
+              color: d.color,
+              size: d.size,
+              amount: d.amount
+            }))
           })),
           status: status,
           client: clientId,
         }
   
         await dispatch(editOrder({ order: orderData, id: id })).unwrap()
-  
         toast.success("Заказ успешно изменен!")
+
+        // Отправка файлов штрих-кодов для товаров
+        const barcodePromises = products
+          .filter(product => product.barcodeFile)
+          .map(product =>
+            dispatch(postProductBarcodes({
+              order_id: id!,
+              product_title: product.product_title,
+              file: product.barcodeFile!
+            })).unwrap()
+          )
+
+        // Отправка QR-кодов для позиций
+        const qrPromises = products.flatMap(product =>
+          product.details
+            .filter(detail => detail.qrFile)
+            .map(detail =>
+              dispatch(postPositionQRs({
+                order_id: id!,
+                product_title: product.product_title,
+                color: detail.color,
+                size: detail.size,
+                file: detail.qrFile!
+              })).unwrap()
+            )
+        )
+
+        // Ожидание загрузки всех файлов
+        const allPromises = [...barcodePromises, ...qrPromises]
+        
+        if (allPromises.length > 0) {
+          await Promise.all(allPromises)
+          toast.success(`Успешно загружено файлов: ${allPromises.length}`)
+        }
+  
         handleReset()
         navigate("/crm/orders")
-      } catch (error) {
+      } catch (error: any) {
         console.error("Ошибка при изменении заказа:", error)
-        toast.error("Произошла ошибка при изменении заказа")
+        const errorMessage = error?.message || "Произошла ошибка при изменении заказа"
+        toast.error(errorMessage)
       } finally {
         setIsSubmitting(false)
       }
@@ -351,6 +424,46 @@ const OrderEdit = () => {
                   {expandedProductId === product.id && (
                     <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-4 bg-gray-50 dark:bg-gray-700/30">
                       
+                      {/* Загрузка штрих-кода товара */}
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                          <FileText size={16} />
+                          Штрих-коды товара
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <label className="flex-1 cursor-pointer">
+                            <input
+                              type="file"
+                              onChange={(e) => handleProductBarcodeUpload(product.id, e.target.files?.[0] || null)}
+                              className="hidden"
+                              accept=".pdf,.png,.jpg,.jpeg"
+                            />
+                            <div className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors border border-blue-200 dark:border-blue-800">
+                              <Upload size={16} />
+                              <span className="text-sm font-medium">
+                                {product.barcodeFile ? "Изменить файл" : "Загрузить файл"}
+                              </span>
+                            </div>
+                          </label>
+                          {product.barcodeFile && (
+                            <button
+                              type="button"
+                              onClick={() => handleProductBarcodeUpload(product.id, null)}
+                              className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                              title="Удалить файл"
+                            >
+                              <X size={18} />
+                            </button>
+                          )}
+                        </div>
+                        {product.barcodeFile && (
+                          <p className="mt-2 text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                            <FileText size={14} />
+                            {product.barcodeFile.name}
+                          </p>
+                        )}
+                      </div>
+
                       {/* Форма добавления детали */}
                       <div className="space-y-3">
                         <p className="text-sm text-left font-medium text-gray-700 dark:text-gray-300">
@@ -408,26 +521,61 @@ const OrderEdit = () => {
                           {product.details.map((detail, index) => (
                             <div 
                               key={index}
-                              className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                              className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 space-y-2"
                             >
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">
-                                  {detail.color}
-                                </span>
-                                <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-xs font-medium">
-                                  {detail.size}
-                                </span>
-                                <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                                  {detail.amount} шт.
-                                </span>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">
+                                    {detail.color}
+                                  </span>
+                                  <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-xs font-medium">
+                                    {detail.size}
+                                  </span>
+                                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                                    {detail.amount} шт.
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeDetail(product.id, index)}
+                                  className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors ml-2"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => removeDetail(product.id, index)}
-                                className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors ml-2"
-                              >
-                                <Trash2 size={16} />
-                              </button>
+                              
+                              {/* Загрузка QR-кода для позиции */}
+                              <div className="flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                                <label className="flex-1 cursor-pointer">
+                                  <input
+                                    type="file"
+                                    onChange={(e) => handleDetailQRUpload(product.id, index, e.target.files?.[0] || null)}
+                                    className="hidden"
+                                    accept=".pdf,.png,.jpg,.jpeg"
+                                  />
+                                  <div className="flex items-center justify-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors border border-green-200 dark:border-green-800">
+                                    <Upload size={14} />
+                                    <span className="text-xs font-medium">
+                                      {detail.qrFile ? "QR загружен" : "Загрузить QR"}
+                                    </span>
+                                  </div>
+                                </label>
+                                {detail.qrFile && (
+                                  <>
+                                    <span className="text-xs text-gray-600 dark:text-gray-400 truncate max-w-[120px]">
+                                      {detail.qrFile.name}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDetailQRUpload(product.id, index, null)}
+                                      className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                      title="Удалить файл"
+                                    >
+                                      <X size={14} />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>
